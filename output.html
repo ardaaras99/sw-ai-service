@@ -1,0 +1,170 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script src="lib/bindings/utils.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 1500px;
+                 height: 750px;
+                 background-color: #ffffff;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+             #config {
+                 float: left;
+                 width: 400px;
+                 height: 600px;
+             }
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+            <div id="config"></div>
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"color": "#97c2fc", "id": 7746811706886848512, "label": "SozlesmeKonu", "shape": "dot", "title": "reason: Metindeki kontrat detaylar\u0131n\u0131 analiz ederek, kira s\u00f6zle\u015fmesinin konusunu ve amac\u0131n\u0131 tan\u0131mlad\u0131m. Kiralanan e\u015fyan\u0131n durumu, adresi, taraflar ve \u00f6deme ko\u015fullar\u0131 gibi \u00f6nemli bilgiler bu node\u0027da \u00f6zetlenmi\u015ftir.\nnode_id: 7746811706886848512\nkonu: \u0130stanbul, Maltepe\u0027de bir mesken kira s\u00f6zle\u015fmesi. Kirac\u0131, temizlik ve kullan\u0131m durumu temiz ve eksiksiz daireyi belirleyip, ayl\u0131k kira ve depozito \u00f6demelerini bankaya yapacak. Kira s\u00fcresi 1 y\u0131l, ba\u015flang\u0131\u00e7 tarihi 21.06.2019. Kirac\u0131 ve kiralayan\u0131n bilgileri yer almakta ve kira \u00f6demeleri belirli tarihlerde yap\u0131lacakt\u0131r."}, {"color": "#97c2fc", "id": 7746972372755021825, "label": "SimdikiDurum", "shape": "dot", "title": "reason: Mevcut durumu, temiz ve eksiksiz, s\u0131f\u0131r daire oldu\u011funu belirtiyor.\nnode_id: 7746972372755021825\nsimdiki_durum: TEM\u0130Z VE EK SK\u0130Z DA\u0130RE"}, {"color": "#97c2fc", "id": 7747250408805105666, "label": "SozlesmeYururluk", "shape": "dot", "title": "reason: Metinde s\u00f6zle\u015fmenin ba\u015flang\u0131\u00e7 tarihi 21.06.2019 olup, bug\u00fcn\u00fcn tarihinden sonra bir tarih de\u011fildir ve s\u00f6zle\u015fmenin biti\u015f tarihi belirtilmemi\u015f, yani bug\u00fcnden \u00f6nceki bir tarih de\u011fil. Bu nedenle, s\u00f6zle\u015fmenin y\u00fcr\u00fcrl\u00fckte olup olmad\u0131\u011f\u0131n\u0131 belirleyemiyor, do\u011frudan emin olam\u0131yoruz. E\u011fer biti\u015f tarihi olsayd\u0131 ve bu tarih bug\u00fcnden sonra olsayd\u0131, s\u00f6zle\u015fme y\u00fcr\u00fcrl\u00fckteydi. E\u011fer ba\u015flang\u0131\u00e7 tarihi bug\u00fcnden sonra olsayd\u0131, y\u00fcr\u00fcrl\u00fckte de\u011fil olurdu.\nnode_id: 7747250408805105666\nsozlesme_yururluk: None"}, {"color": "#97c2fc", "id": 7747533780815183875, "label": "GiderSorumluluklari", "shape": "dot", "title": "reason: Metinde kira s\u00f6zle\u015fmesinde yer alan yan giderler ve masraflar\u0131n hangi taraf\u00e7a kar\u015f\u0131lanaca\u011f\u0131 anlat\u0131lm\u0131\u015ft\u0131r. Elektrik, su, do\u011falgaz, aidat, emlak vergisi ve di\u011fer giderler detayland\u0131r\u0131lm\u0131\u015ft\u0131r.\nnode_id: 7747533780815183875\nelektrik: Kirac\u0131\nsu: Kirac\u0131\ndogalgaz: Kirac\u0131\naidat: Kirac\u0131\nemlak_vergisi: Kirac\u0131\ndiger_giderler: Elektrik, su, do\u011falgaz, aidat, emlak vergisi ve di\u011fer giderler kirac\u0131 taraf\u0131ndan \u00f6denecektir"}, {"color": "#97c2fc", "id": 7747736903240384516, "label": "GeneralDocumentInfo", "shape": "dot", "title": "reason: Metinde s\u00f6zle\u015fmenin genel bilgileri ve ba\u015fl\u0131klar bulundu\u011fu i\u00e7in s\u00f6zle\u015fmenin ismi ve ba\u015fl\u0131\u011f\u0131 belirlendi.\nnode_id: 7747736903240384516\ndok\u00fcman_tipi: kira\ndok\u00fcman_ismi: K\u0130 RA  KONTRATOSU\nsozlesme_no: None"}, {"color": "#97c2fc", "id": 7747917195766923269, "label": "Teminat", "shape": "dot", "title": "reason: Kira s\u00f6zle\u015fmesine teminat olarak depozito verilmi\u015f.\nnode_id: 7747917195766923269\nteminat_miktari: 2500 TL\nteminat_tipi: Depozito"}, {"color": "#97c2fc", "id": 7748134809948651526, "label": "SozlesmeBitisTarihi", "shape": "dot", "title": "reason: S\u00f6zle\u015fme ba\u015flang\u0131\u00e7 tarihi belirtilmi\u015f. Biti\u015f tarihi net olarak ifade edilmemi\u015f ve belirlenemiyor.\nnode_id: 7748134809948651526\nbitis_tarihi: None\naciklama: Biti\u015f tarihi s\u00f6zle\u015fmede belirtilmemi\u015f veya belli de\u011fil."}, {"color": "#97c2fc", "id": 7748374586161627143, "label": "Depozito", "shape": "dot", "title": "reason: Depozito node\u0027unu \u00e7\u0131karmak i\u00e7in metindeki depozito ile ilgili bilgileri ve gereken detaylar\u0131 dikkatlice inceledim.\nnode_id: 7748374586161627143\ndepozitoturu: NaN\nmiktar: 2500 TL\npara_birimi: TL"}, {"color": "#97c2fc", "id": 7748696846684651528, "label": "KiraKonusuMulk", "shape": "dot", "title": "reason: Binan\u0131n kira konusu olmas\u0131 nedeniyle\nnode_id: 7748696846684651528\ntur: Mesken\nolcum: 1+1"}, {"color": "#97c2fc", "id": 7748872625200562186, "label": "KiraAmaci", "shape": "dot", "title": "reason: Kiralayan\u0131n ne ama\u00e7la kullanaca\u011f\u0131n\u0131 belirtmek amac\u0131yla \u00e7\u0131kar\u0131lm\u0131\u015ft\u0131r.\nnode_id: 7748872625200562186\nkira_amaci: MESKEN"}, {"color": "#97c2fc", "id": 7749047803226357771, "label": "UyusmazlikCozumYeri", "shape": "dot", "title": "reason: Yukar\u0131daki metinde, uyusmazl\u0131k durumu veya \u00e7\u00f6z\u00fcm yeri belirtilmedi\u011fi i\u00e7in, bu node\u0027un i\u00e7eri\u011fi bo\u015f veya bilgisi bulunmamaktad\u0131r.\nnode_id: 7749047803226357771\nuyusmazlik_cozum_yeri: None"}, {"color": "#97c2fc", "id": 7749600908040994828, "label": "Demirbas", "shape": "dot", "title": "reason: \u0130\u015fte s\u00f6zle\u015fmede belirtilen ve kirac\u0131n\u0131n kullanabilece\u011fi, m\u00fclkiyeti ise mal sahibi olan e\u015fya, donan\u0131m, malzeme, mobilya, klima, mutfak e\u015fyas\u0131, garaj e\u015fyas\u0131 vb. demirba\u015flar listelenmi\u015f.\nnode_id: 7749600908040994828\ndemirbas_\u00f6zellikleri: ALTUS BULA\u015eIK MAK\u0130NES\u0130"}, {"color": "#97c2fc", "id": 7749600917973106701, "label": "Demirbas", "shape": "dot", "title": "reason: S\u00f6zle\u015fmede listelenen ve kirac\u0131n\u0131n kullanabilece\u011fi, malkiyesi mal sahibi olan di\u011fer demirba\u015flar: \u00c7\u0130FT KAPILI BUZDOLABI, \u00c7AMA\u015eIR MAK\u0130NES\u0130, SIEMENS 4 G\u00d6ZL\u00dc OCAK, RUBEN \u0130S VANT\u0130LAT\u00d6R, AR\u00c7EL\u0130K TV gibi \u00fcr\u00fcnler.\nnode_id: 7749600917973106701\ndemirbas_\u00f6zellikleri: ALTUS \u00c7\u0130FT KAPILI BUZDOLABI"}, {"color": "#97c2fc", "id": 7749600919583719438, "label": "Demirbas", "shape": "dot", "title": "reason: Di\u011fer demirba\u015flar: K\u00d6\u015eE KOLTUK, BERJER, ORTA SEHPA, PUF, YEMEK MASASI VE 4 SANDALYE, \u00c7\u0130FT K\u0130\u015e\u0130L\u0130K BAZALI YATAK, \u0130K\u0130 ADET KOMOD\u0130N, \u0130K\u0130 KAPILI GARDROP, \u00c7AMA\u015eIR ASKISI, AYNA, gibi e\u015fyalar listelenmi\u015f.\nnode_id: 7749600919583719438\ndemirbas_\u00f6zellikleri: K\u00d6\u015eE KOLTUK, BERJER, ORTA SEHPA, PUF, YEMEK MASASI VE 4 SANDALYE, \u00c7\u0130FT K\u0130\u015e\u0130L\u0130K BAZALI YATA\u011eI, \u0130K\u0130 ADET KOMOD\u0130N, \u0130K\u0130 KAPILI GARDROP, \u00c7AMA\u015eIR ASKISI, AYNA"}, {"color": "#97c2fc", "id": 7749805632757432335, "label": "Sigorta", "shape": "dot", "title": "reason: Metinde do\u011frudan sigorta bilgisi veya sigorta ile ilgili y\u00fck\u00fcml\u00fcl\u00fckler belirtilmedi\u011fi i\u00e7in \u00e7\u0131kar\u0131lmaktad\u0131r.\nnode_id: 7749805632757432335\nsigorta_tipi: None\nsigorta_tutari: None\nsigorta_saglayan: None\nsigorta_suresi: None\nsigorta_aciklama: None"}, {"color": "#97c2fc", "id": 7750042398735204368, "label": "KiraArtisOrani", "shape": "dot", "title": "reason: Y\u0131ll\u0131k T\u00dcFE oran\u0131 ve depozito, kira art\u0131\u015f\u0131n\u0131 belirlemek i\u00e7in kullan\u0131lm\u0131\u015ft\u0131r.\nnode_id: 7750042398735204368\nartis_orani: Y\u0131ll\u0131k %25\nartis_periyodu: Y\u0131ll\u0131k\nartis_yontemi: T\u00dcFE\nartis_aciklama: Y\u0131ll\u0131k T\u00dcFE oran\u0131na g\u00f6re kira art\u0131\u015f oran\u0131 belirlenmi\u015ftir."}, {"color": "#97c2fc", "id": 7750671730092539921, "label": "Insan", "shape": "dot", "title": "reason: Dok\u00fcman i\u00e7indeki ger\u00e7ek ki\u015filer tan\u0131mlanm\u0131\u015f, s\u00f6zle\u015fmeyi imzalayan ki\u015filer ve adresleri belirtilmi\u015f.\nnode_id: 7750671730092539921\nad: Yenal\nsoyad: G\u00f6\u011febakan\ntckn: 57235216270\nyabanci_kimlik_no: None\npasaport_no: None\nuyruk_bilgisi: T.C.\neposta: None\ntelefon_no: 0212 277 8293\nkep_adresi: None\nrole: \ndogum_tarihi: None\ncinsiyet: None\nmeslek: None\nvergi_no: None\nvergi_dairesi: None"}, {"color": "#97c2fc", "id": 7750671753177989139, "label": "Insan", "shape": "dot", "title": "reason: Dok\u00fcman i\u00e7indeki ger\u00e7ek ki\u015filer tan\u0131mlanm\u0131\u015f, s\u00f6zle\u015fmeyi imzalayan ki\u015filer ve adresleri belirtilmi\u015f.\nnode_id: 7750671753177989139\nad: Abdi\nsoyad: S\u00fct\u00e7\u00fc\ntckn: 21902271756\nyabanci_kimlik_no: None\npasaport_no: None\nuyruk_bilgisi: None\neposta: None\ntelefon_no: None\nkep_adresi: None\nrole: \ndogum_tarihi: None\ncinsiyet: None\nmeslek: None\nvergi_no: None\nvergi_dairesi: None"}, {"color": "#97c2fc", "id": 7750866271173083156, "label": "Ek", "shape": "dot", "title": "reason: Metinde \u0027Ekler\u0027, \u0027sozlesmenin ekleri\u0027, \u0027ek-1\u0027, \u0027ek-2\u0027 gibi ifadelerin bulundu\u011fu b\u00f6l\u00fcmler oldu\u011fu i\u00e7in bu k\u0131sm\u0131 \u00e7\u0131kard\u0131m.\nnode_id: 7750866271173083156\nek_aciklama: \u0130lave edilen ekler listesi."}, {"color": "#97c2fc", "id": 7751423062143402005, "label": "Sirket", "shape": "dot", "title": "reason: Bu node, \u015firketleri tan\u0131mlar. Dok\u00fcmanda \u015firket olarak ge\u00e7en, t\u00fczel ki\u015fi olan ve s\u00f6zle\u015fmeyi imzalayan veya s\u00f6zle\u015fmede ad\u0131 ge\u00e7en organizasyonlar veya kurulu\u015flar bu node kapsam\u0131nda yer al\u0131r.\nnode_id: 7751423062143402005\nunvan: Yenal G\u00f6\u011febakan\nvkn: 57235216270\nkepadresi: None\nmersisno: None\nrole: "}, {"color": "#97c2fc", "id": 7751642403170418711, "label": "SozlesmeSure", "shape": "dot", "title": "reason: Tarihler ve s\u00fcreler belirlendi\u011fi i\u00e7in, kira s\u00fcresi 1 y\u0131l olarak belirtildi. Ba\u015flang\u0131\u00e7 tarihi 21.06.2019, biti\u015f tarihi 21.06.2020, bu nedenle s\u00fcre 1 y\u0131l.\nnode_id: 7751642403170418711\nsozlesme_suresi: 1 y\u0131l"}, {"color": "#97c2fc", "id": 7751891651933765656, "label": "KiraBedeli", "shape": "dot", "title": "reason: Metinden kira bedeli ve para birimi bilgisi a\u00e7\u0131k\u00e7a \u00e7\u0131kar\u0131lm\u0131\u015ft\u0131r.\nnode_id: 7751891651933765656\nkira_bedeli: 1600.0\npara_birimi: TL\nodeme_periyodu: Ayl\u0131k\nodeme_bilgisi: HER AYIN B\u0130R\u0130NC\u0130 G\u00dcN\u00dc \u0130\u00c7\u0130NDE BANKA HESABINA PE\u015e\u0130N YATIRILACAKTIR.\nodeme_yontemi: banka havalesi"}, {"color": "#97c2fc", "id": 7752086837259403289, "label": "SozlesmeBaslangicTarihi", "shape": "dot", "title": "reason: Kiran\u0131n ba\u015flang\u0131\u00e7 tarihi 21.06.2019 olarak belirlenmi\u015f ve belirli formatta verilmi\u015f.\nnode_id: 7752086837259403289\nbaslangic_tarihi: 2019-06-21\naciklama: None\nimza_tarihinde_yururluge_girer: False"}, {"color": "#97c2fc", "id": 7752193587866239002, "label": "Teminatlar", "shape": "dot", "title": "reason: Predefined\nnode_id: 7752193587866239002\nteminat_var: False"}, {"color": "#97c2fc", "id": 7752193590550593563, "label": "Demirbaslar", "shape": "dot", "title": "reason: Predefined\nnode_id: 7752193590550593563\ndemirbas_var: True"}, {"color": "#97c2fc", "id": 7752193591892770844, "label": "Ekler", "shape": "dot", "title": "reason: Predefined\nnode_id: 7752193591892770844\nek_var: True"}, {"color": "#97c2fc", "id": 7748696849905877001, "label": "Adres", "shape": "dot", "title": "reason: \u0130\u00e7erikte detayl\u0131 adres bilgisi verildi\u011fi i\u00e7in\nnode_id: 7748696849905877001\nil: \u0130stanbul\nil\u00e7e: Maltepe\ncadde: Ba\u015fy\u00fckyolu Cd.\nmahalle: Bah\u00e7eyimli Mah.\napartman: None\nkat: None\nkap\u0131_no: None\nposta_kodu: None\n\u00fclke: T\u00fcrkiye\nada: None\nparsel: None\nacik_adres: Ba\u015fy\u00fckyolu Cd., Bah\u00e7eyimli Mah., Maltepe, \u0130stanbul, T\u00fcrkiye"}, {"color": "#97c2fc", "id": 7750671740293087250, "label": "Adres", "shape": "dot", "title": "reason: \u0130mza ve ileti\u015fim i\u00e7in adres detaylar\u0131 verilmi\u015f.\nnode_id: 7750671740293087250\nil: \u0130STANBUL\nil\u00e7e: MALTEPE\ncadde: BA\u015eIB\u00dcY\u00dcKYOLU CD.\nmahalle: BA\u015eIB\u00dcY\u00dcK MH.\napartman: None\nkat: None\nkap\u0131_no: None\nposta_kodu: None\n\u00fclke: T\u00fcrkiye\nada: None\nparsel: None\nacik_adres: Daru\u015fgafaka cad.Seba Center i\u015f merkezi No:45 Kat:1 \u0130stinye/Sar\u0131yer"}, {"color": "#97c2fc", "id": 7751423068854288406, "label": "Adres", "shape": "dot", "title": "reason: Bu node, \u015firketin adresini temsil eder. \u015eirketin resmi adres bilgisini i\u00e7erir.\nnode_id: 7751423068854288406\nil: \u0130stanbul\nil\u00e7e: Maltepe\ncadde: \u015eebikb\u00fck Yolu Cd.\nmahalle: \u015eebikb\u00fck Mah.\napartman: Kentplus Centrum Sitesi B-1 Blok\nkat: None\nkap\u0131_no: 341\nposta_kodu: None\n\u00fclke: T\u00fcrkiye\nada: None\nparsel: None\nacik_adres: \u015eebikb\u00fck Mah. \u015eebikb\u00fck Yolu Cd. Kentplus Centrum Sitesi B-1 Blok Daire:341, Maltepe/\u0130stanbul"}]);
+                  edges = new vis.DataSet([{"arrows": "to", "from": 7748696846684651528, "label": "HasAdres", "to": 7748696849905877001}, {"arrows": "to", "from": 7750671730092539921, "label": "HasAdres", "to": 7750671740293087250}, {"arrows": "to", "from": 7751423062143402005, "label": "HasAdres", "to": 7751423068854288406}, {"arrows": "to", "from": 7747736903240384516, "label": "HasKiralamAmaci", "to": 7748872625200562186}, {"arrows": "to", "from": 7752193591892770844, "label": "HasEk", "to": 7750866271173083156}, {"arrows": "to", "from": 7747736903240384516, "label": "HasSozlesmeKonusu", "to": 7746811706886848512}, {"arrows": "to", "from": 7747736903240384516, "label": "HasKiralamaBedeli", "to": 7751891651933765656}, {"arrows": "to", "from": 7747736903240384516, "label": "HasSozlesmeEkler", "to": 7752193591892770844}, {"arrows": "to", "from": 7752193590550593563, "label": "HasDemirbas", "to": 7749600908040994828}, {"arrows": "to", "from": 7752193590550593563, "label": "HasDemirbas", "to": 7749600917973106701}, {"arrows": "to", "from": 7752193590550593563, "label": "HasDemirbas", "to": 7749600919583719438}, {"arrows": "to", "from": 7747736903240384516, "label": "HasKiraDemirbaslar", "to": 7752193590550593563}, {"arrows": "to", "from": 7747736903240384516, "label": "HasKiralananMulk", "to": 7748696846684651528}, {"arrows": "to", "from": 7747736903240384516, "label": "HasSigorta", "to": 7749805632757432335}, {"arrows": "to", "from": 7747736903240384516, "label": "HasKiraArtisOrani", "to": 7750042398735204368}, {"arrows": "to", "from": 7747736903240384516, "label": "HasGiderSorumluluklari", "to": 7747533780815183875}, {"arrows": "to", "from": 7747736903240384516, "label": "HasDepozito", "to": 7748374586161627143}, {"arrows": "to", "from": 7747736903240384516, "label": "HasYururluk", "to": 7747250408805105666}, {"arrows": "to", "from": 7752193587866239002, "label": "HasTeminat", "to": 7747917195766923269}, {"arrows": "to", "from": 7747736903240384516, "label": "HasSozlesmeSuresi", "to": 7751642403170418711}, {"arrows": "to", "from": 7747736903240384516, "label": "HasTeminatlar", "to": 7752193587866239002}, {"arrows": "to", "from": 7747736903240384516, "label": "HasBitisTarihi", "to": 7748134809948651526}, {"arrows": "to", "from": 7747736903240384516, "label": "HasSozlesmeUyusmazlikCozumYeri", "to": 7749047803226357771}, {"arrows": "to", "from": 7747736903240384516, "label": "HasSimdikiDurumu", "to": 7746972372755021825}, {"arrows": "to", "from": 7747736903240384516, "label": "HasBaslangicTarihi", "to": 7752086837259403289}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {
+    "configure": {
+        "enabled": true,
+        "filter": [
+            "physics"
+        ]
+    },
+    "edges": {
+        "color": {
+            "inherit": true
+        },
+        "smooth": {
+            "enabled": true,
+            "type": "dynamic"
+        }
+    },
+    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    },
+    "physics": {
+        "enabled": true,
+        "stabilization": {
+            "enabled": true,
+            "fit": true,
+            "iterations": 1000,
+            "onlyDynamicEdges": false,
+            "updateInterval": 50
+        }
+    }
+};
+
+                  
+
+
+                  
+                  // if this network requires displaying the configure window,
+                  // put it in its div
+                  options.configure["container"] = document.getElementById("config");
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>
