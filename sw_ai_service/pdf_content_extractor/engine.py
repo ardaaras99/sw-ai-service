@@ -27,7 +27,7 @@ class Engine:
     def run(self) -> str:
         loader = self.get_model(self.config)
         if self.config.page_mode == PDFLoaderModeEnum.SINGLE:
-            content = loader.load()[0]
+            content = loader.load()[0].page_content
         elif self.config.page_mode == PDFLoaderModeEnum.PAGE:
             content = " ".join([page.page_content for page in loader.load()])
         else:
