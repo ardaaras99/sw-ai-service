@@ -41,8 +41,8 @@ class NodeExtractor:
 
         return filter_node_list(case0_nodes)
 
-    def extract_case1_nodes(self, case0_nodes: list[BaseNode]):
-        case1_classes = filter_node_classes_by_case(HowToExtract.CASE_1, self.node_classes_list)
+    def extract_case1_nodes(self, case0_nodes: list[BaseNode], node_classes_list: list[type[BaseNode]]):
+        case1_classes = filter_node_classes_by_case(HowToExtract.CASE_1, node_classes_list)
         case1_nodes = []
         for case0_node in case0_nodes:
             to_be_created_class = case0_node.node_config.nodeclass_to_be_created_automatically
@@ -52,8 +52,8 @@ class NodeExtractor:
                 case1_classes.remove(to_be_created_class)
         return case1_nodes
 
-    def extract_case2_nodes_and_relations(self, case0_nodes: list[BaseNode]):
-        case2_classes = filter_node_classes_by_case(HowToExtract.CASE_2, self.node_classes_list)
+    def extract_case2_nodes_and_relations(self, case0_nodes: list[BaseNode], node_classes_list: list[type[BaseNode]]):
+        case2_classes = filter_node_classes_by_case(HowToExtract.CASE_2, node_classes_list)
         case2_nodes = []
         case2_relations = []
 
@@ -105,8 +105,8 @@ class NodeExtractor:
 
     def run(self, text: str, node_classes_list: list[type[BaseNode]], ontology_name: str) -> list[BaseNode]:
         case0_nodes = self.extract_case0_nodes(text=text, node_classes_list=node_classes_list)
-        case1_nodes = self.extract_case1_nodes(case0_nodes)
-        case2_nodes, case2_relations = self.extract_case2_nodes_and_relations(case0_nodes)
+        case1_nodes = self.extract_case1_nodes(case0_nodes, node_classes_list)
+        case2_nodes, case2_relations = self.extract_case2_nodes_and_relations(case0_nodes, node_classes_list)
         case0_nodes = self.extract_general_document_info(ontology_name=ontology_name, case0_nodes=case0_nodes)
 
         full_nodes = case0_nodes + case1_nodes + case2_nodes
