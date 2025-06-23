@@ -13,13 +13,11 @@ from sw_ai_service.kg_extractor.utils import filter_node_classes_by_case, filter
 
 
 class NodeExtractor:
-    def __init__(self, llm: ChatOpenAI, node_classes_list: list[type[BaseNode]], ontology_name: str):
-        self.node_classes_list = node_classes_list
+    def __init__(self, llm: ChatOpenAI):
         self.llm = llm
-        self.ontology_name = ontology_name
 
-    def extract_case0_nodes(self, text: str) -> list[BaseNode]:
-        case0_node_classes = filter_node_classes_by_case(HowToExtract.CASE_0, self.node_classes_list)
+    def extract_case0_nodes(self, text: str, node_classes_list: list[type[BaseNode]]) -> list[BaseNode]:
+        case0_node_classes = filter_node_classes_by_case(HowToExtract.CASE_0, node_classes_list)
         case0_nodes = []
         for node_class in case0_node_classes:
             rprint("Processing node class for case 0: ", node_class)
@@ -98,18 +96,18 @@ class NodeExtractor:
                                 )
         return case2_nodes, case2_relations
 
-    def extract_general_document_info(self, case0_nodes: list[BaseNode]):
+    def extract_general_document_info(self, ontology_name: str, case0_nodes: list[BaseNode]):
         for node in case0_nodes:
             if isinstance(node, GeneralDocumentInfo):
-                node.doküman_tipi = self.ontology_name
+                node.doküman_tipi = ontology_name
 
         return case0_nodes
 
-    def run(self, text: str) -> list[BaseNode]:
-        case0_nodes = self.extract_case0_nodes(text)
+    def run(self, text: str, node_classes_list: list[type[BaseNode]], ontology_name: str) -> list[BaseNode]:
+        case0_nodes = self.extract_case0_nodes(text=text, node_classes_list=node_classes_list)
         case1_nodes = self.extract_case1_nodes(case0_nodes)
         case2_nodes, case2_relations = self.extract_case2_nodes_and_relations(case0_nodes)
-        case0_nodes = self.extract_general_document_info(case0_nodes)
+        case0_nodes = self.extract_general_document_info(ontology_name=ontology_name, case0_nodes=case0_nodes)
 
         full_nodes = case0_nodes + case1_nodes + case2_nodes
 

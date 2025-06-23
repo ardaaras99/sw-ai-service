@@ -16,17 +16,16 @@ class HasRelation(BaseModel):
 
 
 class RelationExtractor:
-    def __init__(self, llm: ChatOpenAI, relation_classes_list: list[type[BaseRelation]]):
+    def __init__(self, llm: ChatOpenAI):
         self.llm = llm
-        self.relation_classes_list = relation_classes_list
 
-    def run(self, full_nodes: list[BaseNode]) -> list[BaseRelation]:
-        predefined_relations = self.extract_predefined_relations(full_nodes)
-        relations_w_llm = self.extract_relations_w_llm(full_nodes)
+    def run(self, full_nodes: list[BaseNode], relation_classes_list: list[type[BaseRelation]]) -> list[BaseRelation]:
+        predefined_relations = self.extract_predefined_relations(full_nodes=full_nodes, relation_classes_list=relation_classes_list)
+        relations_w_llm = self.extract_relations_w_llm(full_nodes=full_nodes, relation_classes_list=relation_classes_list)
         return predefined_relations + relations_w_llm
 
-    def extract_predefined_relations(self, full_nodes: list[BaseNode]) -> list[BaseRelation]:
-        predefined_rcl = [rel for rel in self.relation_classes_list if not rel.relation_config.ask_llm]
+    def extract_predefined_relations(self, full_nodes: list[BaseNode], relation_classes_list: list[type[BaseRelation]]) -> list[BaseRelation]:
+        predefined_rcl = [rel for rel in relation_classes_list if not rel.relation_config.ask_llm]
 
         predefined_rel_instances = []
         for rc in predefined_rcl:
@@ -61,8 +60,8 @@ class RelationExtractor:
         chain = prompt | structured_llm
         return chain.invoke({"s_node": s_node, "t_node": t_node, "rc": rc.__name__})
 
-    def extract_relations_w_llm(self, full_nodes: list[BaseNode]) -> list[BaseRelation]:
-        relation_classes_to_ask_llm = [rel for rel in self.relation_classes_list if rel.relation_config.ask_llm]
+    def extract_relations_w_llm(self, full_nodes: list[BaseNode], relation_classes_list: list[type[BaseRelation]]) -> list[BaseRelation]:
+        relation_classes_to_ask_llm = [rel for rel in relation_classes_list if rel.relation_config.ask_llm]
         extracted_relations = []
         for rc in relation_classes_to_ask_llm:
             source_types = get_type_classes(rc, "source_node")

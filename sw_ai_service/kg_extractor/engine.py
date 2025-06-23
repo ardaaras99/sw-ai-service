@@ -10,28 +10,31 @@ from sw_ai_service.kg_extractor.relation_extractor import RelationExtractor
 
 
 class EngineConfig(BaseModel):
-    ontology_name: str
-    node_classes_list: list[type[BaseNode]]
-    relation_classes_list: list[type[BaseRelation]]
     llm_model_id: LLMOptions
 
 
 class Engine:
     def __init__(self, config: EngineConfig):
         self.config = config
-        self.node_extractor = NodeExtractor(
-            ontology_name=config.ontology_name,
-            llm=ChatOpenAI(model=config.llm_model_id),
-            node_classes_list=config.node_classes_list,
-        )
-        self.relation_extractor = RelationExtractor(
-            llm=ChatOpenAI(model=config.llm_model_id),
-            relation_classes_list=config.relation_classes_list,
-        )
+        self.node_extractor = NodeExtractor(llm=ChatOpenAI(model=config.llm_model_id))
+        self.relation_extractor = RelationExtractor(llm=ChatOpenAI(model=config.llm_model_id))
 
-    def run(self, text: str) -> tuple[list[BaseNode], list[BaseRelation]]:
-        full_nodes, case2_relations = self.node_extractor.run(text)
-        relations = self.relation_extractor.run(full_nodes)
+    def run(
+        self,
+        text: str,
+        node_classes_list: list[type[BaseNode]],
+        relation_classes_list: list[type[BaseRelation]],
+        ontology_name: str,
+    ) -> tuple[list[BaseNode], list[BaseRelation]]:
+        full_nodes, case2_relations = self.node_extractor.run(
+            text=text,
+            node_classes_list=node_classes_list,
+            ontology_name=ontology_name,
+        )
+        relations = self.relation_extractor.run(
+            full_nodes=full_nodes,
+            relation_classes_list=relation_classes_list,
+        )
         full_relations = case2_relations + relations
 
         return full_nodes, full_relations
