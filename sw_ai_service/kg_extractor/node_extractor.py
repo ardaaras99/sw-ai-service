@@ -1,3 +1,4 @@
+import asyncio
 import types
 
 from langchain_core.prompts import ChatPromptTemplate
@@ -16,28 +17,36 @@ class NodeExtractor:
     def __init__(self, llm: ChatOpenAI):
         self.llm = llm
 
-    def extract_case0_nodes(self, text: str, node_classes_list: list[type[BaseNode]]) -> list[BaseNode]:
+    async def _process_single_node_class(self, text: str, node_class: type[BaseNode]):
+        """Process a single node class asynchronously"""
+        rprint("Processing node class for case 0: ", node_class)
+        node_dict = node_class_to_node_dict(node_class)
+        ontology = node_dict_to_ontology(node_dict)
+        system_message = f"""
+            Sen Türkçe metinlerinden içerisinden node(düğüm) çıkarma konusunda uzman bir yapay zeka.
+            Senin görevin şu:
+            - Metin içerisinden {node_class.__name__} node'unu çıkarmak.
+            - Çıkan node'u doğru formatta ve doğru şekilde döndürmek.
+            - Çıkan node'un doğru şekilde döndürülmesi için gerekli olan tüm bilgileri doğru şekilde döndürmek.
+            Node'un descriptionı senin için çok önemli, aşağıda onu bulabilirsin. Dikkatlice oku
+            Node'un descriptionı: {node_class.node_config.description}
+        """
+        prompt = ChatPromptTemplate.from_messages([("system", system_message), ("user", "{text}")])
+        structured_llm = self.llm.with_structured_output(ontology)
+        chain = prompt | structured_llm
+        node_class_instances = await chain.ainvoke({"text": text})
+        rprint(node_class_instances)
+        return node_class_instances
+
+    async def extract_case0_nodes(self, text: str, node_classes_list: list[type[BaseNode]]) -> list[BaseNode]:
+        """Extract case0 nodes in parallel using async/await"""
         case0_node_classes = filter_node_classes_by_case(HowToExtract.CASE_0, node_classes_list)
-        case0_nodes = []
-        for node_class in case0_node_classes:
-            rprint("Processing node class for case 0: ", node_class)
-            node_dict = node_class_to_node_dict(node_class)
-            ontology = node_dict_to_ontology(node_dict)
-            system_message = f"""
-                Sen Türkçe metinlerinden içerisinden node(düğüm) çıkarma konusunda uzman bir yapay zeka.
-                Senin görevin şu:
-                - Metin içerisinden {node_class.__name__} node'unu çıkarmak.
-                - Çıkan node'u doğru formatta ve doğru şekilde döndürmek.
-                - Çıkan node'un doğru şekilde döndürülmesi için gerekli olan tüm bilgileri doğru şekilde döndürmek.
-                Node'un descriptionı senin için çok önemli, aşağıda onu bulabilirsin. Dikkatlice oku
-                Node'un descriptionı: {node_class.node_config.description}
-            """
-            prompt = ChatPromptTemplate.from_messages([("system", system_message), ("user", "{text}")])
-            structured_llm = self.llm.with_structured_output(ontology)
-            chain = prompt | structured_llm
-            node_class_instances = chain.invoke({"text": text})
-            rprint(node_class_instances)
-            case0_nodes.append(node_class_instances)
+
+        # Create tasks for parallel execution
+        tasks = [self._process_single_node_class(text, node_class) for node_class in case0_node_classes]
+
+        # Execute all tasks in parallel
+        case0_nodes = await asyncio.gather(*tasks)
 
         return filter_node_list(case0_nodes)
 
@@ -103,8 +112,9 @@ class NodeExtractor:
 
         return case0_nodes
 
-    def run(self, text: str, node_classes_list: list[type[BaseNode]], ontology_name: str) -> list[BaseNode]:
-        case0_nodes = self.extract_case0_nodes(text=text, node_classes_list=node_classes_list)
+    async def run(self, text: str, node_classes_list: list[type[BaseNode]], ontology_name: str) -> tuple[list[BaseNode], list]:
+        """Main async method for extracting nodes"""
+        case0_nodes = await self.extract_case0_nodes(text=text, node_classes_list=node_classes_list)
         case1_nodes = self.extract_case1_nodes(case0_nodes, node_classes_list)
         case2_nodes, case2_relations = self.extract_case2_nodes_and_relations(case0_nodes, node_classes_list)
         case0_nodes = self.extract_general_document_info(ontology_name=ontology_name, case0_nodes=case0_nodes)

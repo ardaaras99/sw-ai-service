@@ -19,19 +19,13 @@ class Engine:
         self.node_extractor = NodeExtractor(llm=ChatOpenAI(model=config.llm_model_id))
         self.relation_extractor = RelationExtractor(llm=ChatOpenAI(model=config.llm_model_id))
 
-    def run(
-        self,
-        text: str,
-        node_classes_list: list[type[BaseNode]],
-        relation_classes_list: list[type[BaseRelation]],
-        ontology_name: str,
-    ) -> tuple[list[BaseNode], list[BaseRelation]]:
-        full_nodes, case2_relations = self.node_extractor.run(
+    async def run(self, text: str, node_classes_list: list[type[BaseNode]], relation_classes_list: list[type[BaseRelation]], ontology_name: str) -> tuple[list[BaseNode], list[BaseRelation]]:
+        full_nodes, case2_relations = await self.node_extractor.run(
             text=text,
             node_classes_list=node_classes_list,
             ontology_name=ontology_name,
         )
-        relations = self.relation_extractor.run(
+        relations = await self.relation_extractor.run(
             full_nodes=full_nodes,
             relation_classes_list=relation_classes_list,
         )

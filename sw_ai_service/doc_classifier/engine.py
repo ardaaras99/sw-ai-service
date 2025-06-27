@@ -55,11 +55,11 @@ class Engine:
         lib_name = first_response.lib_enum_instance.name
         # if lib_name is UNK, return first_response, None
         if lib_name == "UNK":
-            return first_response.lib_enum_instance.name, "UNK"
+            return DocClassifierResponse(lib_name=first_response.lib_enum_instance.name, ontology_name="UNK")
         # elif score is less than 50, return first_response, None
         elif first_response.score < 50:
             first_response.lib_enum_instance = lib_enum.UNK
-            return first_response.lib_enum_instance.name, "UNK"
+            return DocClassifierResponse(lib_name=first_response.lib_enum_instance.name, ontology_name="UNK")
         # else, check ontology
         else:
             possible_ontology_names = [key for key in dir_structure[lib_name]]
@@ -73,8 +73,8 @@ class Engine:
 
             # if score is less than 50, return first_response, None
             if first_response.score < 50:
-                return first_response.lib_enum_instance.name, "UNK"
+                return DocClassifierResponse(lib_name=first_response.lib_enum_instance.name, ontology_name="UNK")
             else:
                 self.agent.response_model = OntologyClassificationResponse
                 second_response: OntologyClassificationResponse = self.agent.run(message=text).content
-                return first_response.lib_enum_instance.name, second_response.ontology_name.name
+                return DocClassifierResponse(lib_name=first_response.lib_enum_instance.name, ontology_name=second_response.ontology_name.name)
