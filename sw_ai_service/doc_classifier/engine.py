@@ -14,6 +14,11 @@ INSTRUCTIONS = """
     """
 
 
+class DocClassifierResponse(BaseModel):
+    lib_name: str | None
+    ontology_name: str | None
+
+
 class EngineConfig(BaseModel):
     llm_model_id: LLMOptions
     markdown: bool
@@ -33,9 +38,10 @@ class Engine:
             debug_mode=config.debug_mode,
         )
 
-    def run(self, text: str, dir_structure: dict):
+    def run(self, text: str, dir_structure: dict) -> DocClassifierResponse:
         # first step
         possible_lib_names = [key for key in dir_structure.keys()]
+        possible_lib_names.append("UNK")
         lib_enum: type[enum.StrEnum] = enum.StrEnum("LibEnum", possible_lib_names)
 
         class LibClassificationResponse(BaseModel):
@@ -47,16 +53,28 @@ class Engine:
 
         first_response: LibClassificationResponse = self.agent.run(message=text).content
         lib_name = first_response.lib_enum_instance.name
+        # if lib_name is UNK, return first_response, None
+        if lib_name == "UNK":
+            return first_response.lib_enum_instance.name, "UNK"
+        # elif score is less than 50, return first_response, None
+        elif first_response.score < 50:
+            first_response.lib_enum_instance = lib_enum.UNK
+            return first_response.lib_enum_instance.name, "UNK"
+        # else, check ontology
+        else:
+            possible_ontology_names = [key for key in dir_structure[lib_name]]
+            possible_ontology_names.append("UNK")
+            ontology_name_enum: type[enum.StrEnum] = enum.StrEnum("OntologyNameEnum", possible_ontology_names)
 
-        # second step
-        possible_ontology_names = [key for key in dir_structure[lib_name]]
-        ontology_name_enum: type[enum.StrEnum] = enum.StrEnum("OntologyNameEnum", possible_ontology_names)
+            class OntologyClassificationResponse(BaseModel):
+                ontology_name: ontology_name_enum
+                score: int = Field(description="describes how confident the model is about the ontology name", ge=0, le=100)
+                rationale: str = Field(description="sence bu döküman neden senin seçtiğin türe ait")
 
-        class OntologyClassificationResponse(BaseModel):
-            ontology_name: ontology_name_enum
-            score: int = Field(description="describes how confident the model is about the ontology name", ge=0, le=100)
-            rationale: str = Field(description="sence bu döküman neden senin seçtiğin türe ait")
-
-        self.agent.response_model = OntologyClassificationResponse
-        second_response: OntologyClassificationResponse = self.agent.run(message=text).content
-        return first_response, second_response
+            # if score is less than 50, return first_response, None
+            if first_response.score < 50:
+                return first_response.lib_enum_instance.name, "UNK"
+            else:
+                self.agent.response_model = OntologyClassificationResponse
+                second_response: OntologyClassificationResponse = self.agent.run(message=text).content
+                return first_response.lib_enum_instance.name, second_response.ontology_name.name

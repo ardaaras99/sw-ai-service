@@ -21,8 +21,6 @@ pdf_content_extractor_engine = PDFContentExtractorEngine(
     ),
 )
 
-text = pdf_content_extractor_engine.run()
-
 
 doc_classifier_engine = DocClassifierEngine(
     config=DocClassifierEngineConfig(
@@ -32,10 +30,11 @@ doc_classifier_engine = DocClassifierEngine(
     ),
 )
 
+# text = "This is a Legal document"
 text = pdf_content_extractor_engine.run()
-
 first_response, second_response = doc_classifier_engine.run(text, DIR_STRUCTURE)
-
+rprint(first_response, second_response)
+# %%
 
 rprint(f"We found that the document is about [bold green]{first_response.lib_enum_instance.name}[/bold green] and [bold green]{second_response.ontology_name.name}[/bold green] ontology")
 
